@@ -18,7 +18,9 @@ A web application that analyzes your Spotify playlists to provide insights about
 
 - **Backend**: Node.js, Express.js
 - **Frontend**: HTML, CSS, JavaScript (Vanilla)
-- **APIs**: Spotify Web API
+- **APIs**: 
+  - Spotify Web API (for OAuth and playlist access)
+  - RapidAPI Track Analysis (for audio features analysis)
 - **Deployment**: Render-ready configuration
 
 ## Setup Instructions
@@ -30,6 +32,12 @@ A web application that analyzes your Spotify playlists to provide insights about
    - Create a new app
    - Note your Client ID and Client Secret
    - Add redirect URI: `http://localhost:3000/callback` (for local development)
+
+2. **RapidAPI Account**: You'll need a RapidAPI key for track analysis
+   - Go to [RapidAPI](https://rapidapi.com/)
+   - Sign up for an account
+   - Subscribe to a music/track analysis API (e.g., Shazam Core API)
+   - Get your RapidAPI key from the dashboard
 
 ### Local Development
 
@@ -49,10 +57,12 @@ A web application that analyzes your Spotify playlists to provide insights about
    cp .env.example .env
    ```
    
-   Edit `.env` file with your Spotify credentials:
+   Edit `.env` file with your API credentials:
    ```
    SPOTIFY_CLIENT_ID=your_client_id_here
    SPOTIFY_CLIENT_SECRET=your_client_secret_here
+   RAPIDAPI_KEY=your_rapidapi_key_here
+   RAPIDAPI_HOST=shazam-core.p.rapidapi.com
    REDIRECT_URI=http://localhost:3000/callback
    PORT=3000
    ```
