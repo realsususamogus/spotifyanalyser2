@@ -85,17 +85,33 @@ In your Render service dashboard, go to "Environment" and add:
 - Check that `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are set correctly
 - Ensure there are no extra spaces in the values
 
-**"Invalid redirect URI"**
+**"Invalid redirect URI" / "String did not match expected pattern"**
 - Verify the `REDIRECT_URI` environment variable matches exactly what's in your Spotify app
 - Make sure the URL uses `https://` (not `http://`)
+- Ensure there are no trailing spaces in the `REDIRECT_URI` value
+- The format must be: `https://your-exact-app-name.onrender.com/callback`
+- Check the debug endpoint: `https://your-app-name.onrender.com/debug/config` to verify current configuration
 
 **Login redirects to error page**
 - Check Render logs for detailed error messages
-- Verify your Spotify app has the correct redirect URI configured
+- Verify your Spotify app has the correct redirect URI configured  
+- If you see "invalid_redirect_uri" error, the redirect URI in your environment doesn't match your Spotify app settings
 
 **"Failed to fetch playlists"**
 - This usually indicates an issue with the access token
 - Try logging out and logging in again
+
+### Step-by-Step Redirect URI Fix
+
+If you're getting redirect URI errors:
+
+1. **Check your current configuration**: Visit `https://your-app-name.onrender.com/debug/config`
+2. **Note the `redirectUri` value shown**
+3. **Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)**
+4. **Open your app settings**
+5. **In "Redirect URIs", add exactly**: The URI from step 2
+6. **Save changes in Spotify dashboard**
+7. **Test the login flow again**
 
 ### Viewing Logs
 

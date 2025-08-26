@@ -25,6 +25,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Debug endpoint to help verify configuration
+app.get('/debug/config', (req, res) => {
+    res.json({
+        redirectUri: REDIRECT_URI,
+        hasClientId: !!CLIENT_ID,
+        hasClientSecret: !!CLIENT_SECRET,
+        nodeEnv: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Spotify OAuth - Generate authorization URL
 app.get('/auth/login', (req, res) => {
     if (!CLIENT_ID || !CLIENT_SECRET) {
@@ -32,6 +42,8 @@ app.get('/auth/login', (req, res) => {
             error: 'Spotify API credentials not configured. Please set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET environment variables.' 
         });
     }
+    
+    console.log('OAuth login request - Redirect URI:', REDIRECT_URI);
     
     const scopes = 'playlist-read-private playlist-read-collaborative user-read-private';
     const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${CLIENT_ID}&scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
@@ -41,6 +53,9 @@ app.get('/auth/login', (req, res) => {
 // Spotify OAuth callback
 app.get('/callback', async (req, res) => {
     const { code } = req.query;
+    
+    console.log('OAuth callback received - Code:', code ? 'present' : 'missing');
+    console.log('Using redirect URI:', REDIRECT_URI);
     
     if (!code) {
         return res.redirect('/?error=authorization_failed');
@@ -70,7 +85,15 @@ app.get('/callback', async (req, res) => {
         
     } catch (error) {
         console.error('Error exchanging code for token:', error.response?.data || error.message);
-        res.redirect('/?error=token_exchange_failed');
+        
+        // Provide more specific error information for common OAuth issues
+        if (error.response?.data?.error === 'invalid_grant') {
+            console.error('OAuth Error: Invalid grant - This usually means the redirect_uri doesn\'t match what\'s configured in Spotify app');
+            console.error('Expected redirect_uri:', REDIRECT_URI);
+            res.redirect('/?error=invalid_redirect_uri');
+        } else {
+            res.redirect('/?error=token_exchange_failed');
+        }
     }
 });
 
