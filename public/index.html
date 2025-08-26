@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Playlist Analyzer</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Spotify Playlist Analyzer</h1>
+            <p>Analyze your Spotify playlists to discover interesting insights about your music taste</p>
+        </header>
+
+        <main>
+            <!-- Login Section -->
+            <div id="login-section" class="section">
+                <div class="login-card">
+                    <h2>Connect to Spotify</h2>
+                    <p>Login with your Spotify account to analyze your playlists</p>
+                    <button id="login-btn" class="btn btn-primary">
+                        <span>🎵</span>
+                        Login with Spotify
+                    </button>
+                </div>
+            </div>
+
+            <!-- Playlist Selection Section -->
+            <div id="playlist-section" class="section" style="display: none;">
+                <div class="playlist-card">
+                    <h2>Select a Playlist to Analyze</h2>
+                    <div id="playlists-loading" class="loading">Loading your playlists...</div>
+                    <div id="playlists-container"></div>
+                </div>
+            </div>
+
+            <!-- Analysis Results Section -->
+            <div id="results-section" class="section" style="display: none;">
+                <div class="results-card">
+                    <div id="analysis-loading" class="loading">Analyzing playlist...</div>
+                    <div id="analysis-results"></div>
+                    <button id="back-btn" class="btn btn-secondary" style="display: none;">
+                        ← Back to Playlists
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="error-section" class="section" style="display: none;">
+                <div class="error-card">
+                    <h2>❌ Something went wrong</h2>
+                    <p id="error-message"></p>
+                    <button id="retry-btn" class="btn btn-secondary">Try Again</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>This app uses the Spotify Web API. Your data is not stored on our servers.</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
