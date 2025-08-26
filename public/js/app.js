@@ -13,7 +13,17 @@ class SpotifyAnalyzer {
         const error = urlParams.get('error');
 
         if (error) {
-            this.showError(`Authentication failed: ${error}`);
+            let errorMessage = 'Authentication failed';
+            if (error === 'invalid_redirect_uri') {
+                errorMessage = 'Authentication failed: Redirect URI mismatch. Please check that the REDIRECT_URI environment variable matches exactly what\'s configured in your Spotify app settings.';
+            } else if (error === 'token_exchange_failed') {
+                errorMessage = 'Authentication failed: Unable to exchange authorization code for access token. Please check your Spotify app credentials and redirect URI configuration.';
+            } else if (error === 'authorization_failed') {
+                errorMessage = 'Authentication failed: Authorization was denied or cancelled.';
+            } else {
+                errorMessage = `Authentication failed: ${error}`;
+            }
+            this.showError(errorMessage);
             return;
         }
 
