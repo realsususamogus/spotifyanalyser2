@@ -27,6 +27,12 @@ app.get('/', (req, res) => {
 
 // Spotify OAuth - Generate authorization URL
 app.get('/auth/login', (req, res) => {
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+        return res.status(500).json({ 
+            error: 'Spotify API credentials not configured. Please set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET environment variables.' 
+        });
+    }
+    
     const scopes = 'playlist-read-private playlist-read-collaborative user-read-private';
     const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${CLIENT_ID}&scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
     res.json({ authUrl });

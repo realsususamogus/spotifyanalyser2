@@ -47,10 +47,16 @@ class SpotifyAnalyzer {
     async login() {
         try {
             const response = await fetch('/auth/login');
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to initiate login');
+            }
+            
             const data = await response.json();
             window.location.href = data.authUrl;
         } catch (error) {
-            this.showError('Failed to initiate login');
+            this.showError(error.message || 'Failed to initiate login. Please check that the server is properly configured with Spotify API credentials.');
         }
     }
 
