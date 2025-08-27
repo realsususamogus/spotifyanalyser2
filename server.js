@@ -184,45 +184,57 @@ app.post('/api/analyze-playlist', async (req, res) => {
     }
 });
 
-// Get track analysis from ReccoBeats API
+// Get track analysis from ReccoBeats API using bulk endpoint
 async function getTrackAnalysis(tracks) {
     const audioFeatures = [];
-    
-    // Process tracks in batches to avoid rate limiting
-    const batchSize = 10;
-    for (let i = 0; i < tracks.length; i += batchSize) {
-        const batch = tracks.slice(i, i + batchSize);
-        const batchPromises = batch.map(async (item) => {
-            try {
-                // Use Spotify track ID directly with ReccoBeats API (no authentication required)
-                const response = await axios.get(`${RECCOBEATS_BASE_URL}/track/${item.track.id}/audio-features`, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 10000 // 10 second timeout
-                });
+    const batchSize = 50; // Increase batch size for fewer requests
 
-                // ReccoBeats should return audio features in a compatible format
-                // If the response format differs from Spotify, we may need to map it
-                const features = response.data;
-                
-                // Ensure we return the expected format
-                return {
+    for (let i = 0; i < tracks.length; i += batchSize) {
+        // Collect Spotify IDs for this batch
+        const batch = tracks.slice(i, i + batchSize);
+        const ids = batch.map(item => item.track.id);
+
+        try {
+            // Bulk request: GET /track?ids=spotifyId1&ids=spotifyId2&...
+            const response = await axios.get(`${RECCOBEATS_BASE_URL}/track`, {
+                params: {
+                    ids: ids // axios will serialize array as repeated param
+                },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000 // 10 second timeout
+            });
+
+            // Map features from response to track IDs
+            // Assume response.data is an array of track objects with Spotify IDs
+            const featuresMap = {};
+            response.data.forEach(track => {
+                featuresMap[track.spotify_id] = track.audio_features || {};
+            });
+
+            batch.forEach(item => {
+                const features = featuresMap[item.track.id] || {};
+                audioFeatures.push({
                     id: item.track.id,
-                    danceability: features.danceability || 0.5,
-                    energy: features.energy || 0.5,
-                    speechiness: features.speechiness || 0.1,
-                    acousticness: features.acousticness || 0.3,
-                    instrumentalness: features.instrumentalness || 0.2,
-                    liveness: features.liveness || 0.2,
-                    valence: features.valence || 0.5,
-                    tempo: features.tempo || 120
-                };
-                
-            } catch (error) {
-                console.error(`Error analyzing track ${item.track.name} (${item.track.id}):`, error.message);
-                // Return default values if analysis fails
-                return {
+                    danceability: features.danceability ?? 0.5,
+                    energy: features.energy ?? 0.5,
+                    speechiness: features.speechiness ?? 0.1,
+                    acousticness: features.acousticness ?? 0.3,
+                    instrumentalness: features.instrumentalness ?? 0.2,
+                    liveness: features.liveness ?? 0.2,
+                    valence: features.valence ?? 0.5,
+                    tempo: features.tempo ?? 120
+                });
+            });
+        } catch (error) {
+            console.error(
+                `Error analyzing tracks ${ids.join(', ')}:`,
+                error.response?.data || error.message
+            );
+            // Return default values for all tracks in batch
+            batch.forEach(item => {
+                audioFeatures.push({
                     id: item.track.id,
                     danceability: 0.5,
                     energy: 0.5,
@@ -232,13 +244,10 @@ async function getTrackAnalysis(tracks) {
                     liveness: 0.2,
                     valence: 0.5,
                     tempo: 120
-                };
-            }
-        });
-        
-        const batchResults = await Promise.all(batchPromises);
-        audioFeatures.push(...batchResults);
-        
+                });
+            });
+        }
+
         // Add small delay between batches to respect rate limits
         if (i + batchSize < tracks.length) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -247,7 +256,6 @@ async function getTrackAnalysis(tracks) {
 
     return audioFeatures;
 }
-
 // Analysis helper function
 function analyzePlaylist(tracks, audioFeatures) {
     if (!tracks.length) return {};
