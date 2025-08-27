@@ -195,37 +195,39 @@ async function getTrackAnalysis(tracks) {
             // Use comma-separated ids string for the API request
             const response = await axios.get(`${RECCOBEATS_BASE_URL}/track`, {
                 params: {
-                    ids: ids.join(',') // <--- THIS IS THE KEY CHANGE
+                    ids: ids.join(',')
                 },
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 timeout: 10000
             });
-            console.log('API response: ', response.data)
+            console.log('API response: ', response.data);
 
-            
-            // Map features from response to track IDs
-            const featuresMap = {};
-            response.data.forEach(track => {
-                featuresMap[track.spotify_id] = track.audio_features || {};
-                
-            });
-
-            batch.forEach(item => {
-                const features = featuresMap[item.track.id] || {};
-                audioFeatures.push({
-                    id: item.track.id,
-                    danceability: features.danceability ?? 0.5,
-                    energy: features.energy ?? 0.5,
-                    speechiness: features.speechiness ?? 0.1,
-                    acousticness: features.acousticness ?? 0.3,
-                    instrumentalness: features.instrumentalness ?? 0.2,
-                    liveness: features.liveness ?? 0.2,
-                    valence: features.valence ?? 0.5,
-                    tempo: features.tempo ?? 120
+            // Ensure response.data.content is an array before iterating
+            if (Array.isArray(response.data.content)) {
+                const featuresMap = {};
+                response.data.content.forEach(track => {
+                    featuresMap[track.id] = track.audio_features || {};
                 });
-            });
+
+                batch.forEach(item => {
+                    const features = featuresMap[item.track.id] || {};
+                    audioFeatures.push({
+                        id: item.track.id,
+                        danceability: features.danceability ?? 0.5,
+                        energy: features.energy ?? 0.5,
+                        speechiness: features.speechiness ?? 0.1,
+                        acousticness: features.acousticness ?? 0.3,
+                        instrumentalness: features.instrumentalness ?? 0.2,
+                        liveness: features.liveness ?? 0.2,
+                        valence: features.valence ?? 0.5,
+                        tempo: features.tempo ?? 120
+                    });
+                });
+            } else {
+                console.error('Unexpected response format:', response.data);
+            }
         } catch (error) {
             console.error(
                 `Error analyzing tracks ${ids.join(', ')}:`,
