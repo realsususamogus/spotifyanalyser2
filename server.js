@@ -20,9 +20,9 @@ const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
 
-// RapidAPI credentials (for track analysis)
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
-const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || 'shazam-core.p.rapidapi.com';
+// ReccoBeats API configuration (for track analysis)
+const RECCOBEATS_API_KEY = process.env.RECCOBEATS_API_KEY;
+const RECCOBEATS_BASE_URL = process.env.RECCOBEATS_BASE_URL || 'https://api.reccobeats.com/v1';
 
 // Routes
 app.get('/', (req, res) => {
@@ -35,8 +35,8 @@ app.get('/debug/config', (req, res) => {
         redirectUri: REDIRECT_URI,
         hasClientId: !!CLIENT_ID,
         hasClientSecret: !!CLIENT_SECRET,
-        hasRapidApiKey: !!RAPIDAPI_KEY,
-        rapidApiHost: RAPIDAPI_HOST,
+        hasReccoBeatsApiKey: !!RECCOBEATS_API_KEY,
+        reccoBeatsBaseUrl: RECCOBEATS_BASE_URL,
         nodeEnv: process.env.NODE_ENV || 'development'
     });
 });
@@ -160,7 +160,7 @@ app.post('/api/analyze-playlist', async (req, res) => {
         const playlist = playlistResponse.data;
         const tracks = tracksResponse.data.items.filter(item => item.track && item.track.id);
 
-        // Get audio features using RapidAPI Track Analysis
+        // Get audio features using ReccoBeats Track Analysis
         const audioFeatures = await getTrackAnalysis(tracks);
 
         // Perform analysis
@@ -186,11 +186,11 @@ app.post('/api/analyze-playlist', async (req, res) => {
     }
 });
 
-// Get track analysis from RapidAPI
+// Get track analysis from ReccoBeats API
 async function getTrackAnalysis(tracks) {
-    if (!RAPIDAPI_KEY) {
-        console.warn('RapidAPI key not configured. Using mock audio features data.');
-        // Return mock data with the expected structure when RapidAPI is not configured
+    if (!RECCOBEATS_API_KEY) {
+        console.warn('ReccoBeats API key not configured. Using mock audio features data.');
+        // Return mock data with the expected structure when ReccoBeats is not configured
         return tracks.map(item => ({
             id: item.track.id,
             danceability: Math.random() * 0.8 + 0.2, // 0.2-1.0
@@ -207,35 +207,39 @@ async function getTrackAnalysis(tracks) {
     const audioFeatures = [];
     
     // Process tracks in batches to avoid rate limiting
-    const batchSize = 5;
+    const batchSize = 10;
     for (let i = 0; i < tracks.length; i += batchSize) {
         const batch = tracks.slice(i, i + batchSize);
         const batchPromises = batch.map(async (item) => {
             try {
-                // Use track name and artist for analysis since we don't have Spotify track IDs in RapidAPI
-                const query = `${item.track.name} ${item.track.artists[0]?.name || ''}`.trim();
-                
-                // Make RapidAPI call for track analysis
-                const response = await axios.get(`https://${RAPIDAPI_HOST}/v2/search`, {
-                    params: {
-                        query: query,
-                        limit: 1
-                    },
+                // Use Spotify track ID directly with ReccoBeats API
+                const response = await axios.get(`${RECCOBEATS_BASE_URL}/track/${item.track.id}/audio-features`, {
                     headers: {
-                        'X-RapidAPI-Key': RAPIDAPI_KEY,
-                        'X-RapidAPI-Host': RAPIDAPI_HOST
+                        'Authorization': `Bearer ${RECCOBEATS_API_KEY}`,
+                        'Content-Type': 'application/json'
                     },
                     timeout: 10000 // 10 second timeout
                 });
 
-                // Extract audio features from RapidAPI response
-                // Note: Different RapidAPI services have different response formats
-                // This is a generic implementation that may need adjustment based on the specific API
-                const analysisData = extractAudioFeatures(response.data, item.track.id);
-                return analysisData;
+                // ReccoBeats should return audio features in a compatible format
+                // If the response format differs from Spotify, we may need to map it
+                const features = response.data;
+                
+                // Ensure we return the expected format
+                return {
+                    id: item.track.id,
+                    danceability: features.danceability || 0.5,
+                    energy: features.energy || 0.5,
+                    speechiness: features.speechiness || 0.1,
+                    acousticness: features.acousticness || 0.3,
+                    instrumentalness: features.instrumentalness || 0.2,
+                    liveness: features.liveness || 0.2,
+                    valence: features.valence || 0.5,
+                    tempo: features.tempo || 120
+                };
                 
             } catch (error) {
-                console.error(`Error analyzing track ${item.track.name}:`, error.message);
+                console.error(`Error analyzing track ${item.track.name} (${item.track.id}):`, error.message);
                 // Return default values if analysis fails
                 return {
                     id: item.track.id,
@@ -256,126 +260,11 @@ async function getTrackAnalysis(tracks) {
         
         // Add small delay between batches to respect rate limits
         if (i + batchSize < tracks.length) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
     }
 
     return audioFeatures;
-}
-
-// Extract audio features from RapidAPI response
-function extractAudioFeatures(apiResponse, trackId) {
-    // This function maps the RapidAPI response to Spotify-like audio features format
-    // The exact mapping depends on the specific RapidAPI service being used
-    
-    try {
-        // For Shazam API or similar services, the response structure might be different
-        // This is a generic implementation that should be adapted based on the actual API response
-        
-        if (apiResponse?.tracks?.hits?.[0]) {
-            const track = apiResponse.tracks.hits[0].track;
-            
-            // Map available data to audio features
-            // These values are estimated based on available metadata
-            return {
-                id: trackId,
-                danceability: estimateDanceability(track),
-                energy: estimateEnergy(track),
-                speechiness: estimateSpeechiness(track),
-                acousticness: estimateAcousticness(track),
-                instrumentalness: estimateInstrumentalness(track),
-                liveness: estimateLiveness(track),
-                valence: estimateValence(track),
-                tempo: estimateTempo(track)
-            };
-        }
-    } catch (error) {
-        console.error('Error extracting audio features:', error);
-    }
-    
-    // Return default values if extraction fails
-    return {
-        id: trackId,
-        danceability: 0.5,
-        energy: 0.5,
-        speechiness: 0.1,
-        acousticness: 0.3,
-        instrumentalness: 0.2,
-        liveness: 0.2,
-        valence: 0.5,
-        tempo: 120
-    };
-}
-
-// Helper functions to estimate audio features from available track metadata
-function estimateDanceability(track) {
-    // Estimate danceability based on genre, BPM, etc.
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('dance') || genre.toLowerCase().includes('electronic')) {
-        return Math.random() * 0.3 + 0.7; // 0.7-1.0 for dance music
-    }
-    return Math.random() * 0.6 + 0.2; // 0.2-0.8 for other genres
-}
-
-function estimateEnergy(track) {
-    // Estimate energy based on tempo and genre
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('rock') || genre.toLowerCase().includes('metal')) {
-        return Math.random() * 0.3 + 0.7;
-    }
-    return Math.random() * 0.7 + 0.3;
-}
-
-function estimateSpeechiness(track) {
-    // Estimate speechiness (rap/hip-hop would be higher)
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('rap') || genre.toLowerCase().includes('hip hop')) {
-        return Math.random() * 0.4 + 0.4; // 0.4-0.8 for rap
-    }
-    return Math.random() * 0.2; // 0-0.2 for most music
-}
-
-function estimateAcousticness(track) {
-    // Estimate acoustic nature
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('acoustic') || genre.toLowerCase().includes('folk')) {
-        return Math.random() * 0.4 + 0.6;
-    }
-    return Math.random() * 0.6;
-}
-
-function estimateInstrumentalness(track) {
-    // Estimate instrumental content
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('instrumental') || genre.toLowerCase().includes('classical')) {
-        return Math.random() * 0.5 + 0.5;
-    }
-    return Math.random() * 0.3;
-}
-
-function estimateLiveness(track) {
-    // Most tracks are studio recordings
-    return Math.random() * 0.3 + 0.1;
-}
-
-function estimateValence(track) {
-    // Estimate positivity/happiness
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('happy') || genre.toLowerCase().includes('pop')) {
-        return Math.random() * 0.4 + 0.6;
-    }
-    return Math.random() * 0.8 + 0.2;
-}
-
-function estimateTempo(track) {
-    // Estimate BPM based on genre
-    const genre = track.genres?.primary || '';
-    if (genre.toLowerCase().includes('dance') || genre.toLowerCase().includes('electronic')) {
-        return Math.random() * 60 + 120; // 120-180 BPM
-    } else if (genre.toLowerCase().includes('ballad') || genre.toLowerCase().includes('slow')) {
-        return Math.random() * 40 + 60; // 60-100 BPM
-    }
-    return Math.random() * 80 + 80; // 80-160 BPM
 }
 
 // Analysis helper function

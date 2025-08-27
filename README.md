@@ -20,7 +20,7 @@ A web application that analyzes your Spotify playlists to provide insights about
 - **Frontend**: HTML, CSS, JavaScript (Vanilla)
 - **APIs**: 
   - Spotify Web API (for OAuth and playlist access)
-  - RapidAPI Track Analysis (for audio features analysis)
+  - ReccoBeats API (for audio features analysis)
 - **Deployment**: Render-ready configuration
 
 ## Setup Instructions
@@ -33,11 +33,10 @@ A web application that analyzes your Spotify playlists to provide insights about
    - Note your Client ID and Client Secret
    - Add redirect URI: `http://localhost:3000/callback` (for local development)
 
-2. **RapidAPI Account**: You'll need a RapidAPI key for track analysis
-   - Go to [RapidAPI](https://rapidapi.com/)
-   - Sign up for an account
-   - Subscribe to a music/track analysis API (e.g., Shazam Core API)
-   - Get your RapidAPI key from the dashboard
+2. **ReccoBeats API Account**: You'll need a ReccoBeats API key for track analysis
+   - Go to [ReccoBeats API](https://api.reccobeats.com/)
+   - Sign up for an account or check their documentation for access
+   - Get your API key for track audio features analysis
 
 ### Local Development
 
@@ -61,8 +60,8 @@ A web application that analyzes your Spotify playlists to provide insights about
    ```
    SPOTIFY_CLIENT_ID=your_client_id_here
    SPOTIFY_CLIENT_SECRET=your_client_secret_here
-   RAPIDAPI_KEY=your_rapidapi_key_here
-   RAPIDAPI_HOST=shazam-core.p.rapidapi.com
+   RECCOBEATS_API_KEY=your_reccobeats_api_key_here
+   RECCOBEATS_BASE_URL=https://api.reccobeats.com/v1
    REDIRECT_URI=http://localhost:3000/callback
    PORT=3000
    ```
