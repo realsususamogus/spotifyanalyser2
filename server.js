@@ -192,16 +192,17 @@ async function getTrackAnalysis(tracks) {
         const ids = batch.map(item => item.track.id);
 
         try {
-            // Use comma-separated ids string for the API request
-            const response = await axios.get(`https://api.reccobeats.com/v1/analysis/audio-features`, {
-                params: {
-                    ids: ids.join(',')
-                },
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                timeout: 10000
-            });
+            // Use POST method for the API request
+            const response = await axios.post(
+                'https://api.reccobeats.com/v1/analysis/audio-features',
+                { ids }, // Send the IDs in the request body
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 10000
+                }
+            );
             console.log('API response: ', response.data);
 
             // Ensure response.data.content is an array before iterating
