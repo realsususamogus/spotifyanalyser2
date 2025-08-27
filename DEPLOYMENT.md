@@ -52,6 +52,7 @@ In your Vercel project dashboard, go to "Settings" → "Environment Variables" a
 |--------------|-------|-------------|
 | `SPOTIFY_CLIENT_ID` | `your_client_id` | Your Spotify app's Client ID |
 | `SPOTIFY_CLIENT_SECRET` | `your_client_secret` | Your Spotify app's Client Secret |
+| `RECCOBEATS_BASE_URL` | `https://api.reccobeats.com/v1` | ReccoBeats API base URL (optional, uses default if not set) |
 | `REDIRECT_URI` | `https://your-app-name.vercel.app/callback` | OAuth callback URL |
 
 **Important**: Replace `your-app-name` in the `REDIRECT_URI` with your actual Vercel deployment URL.
@@ -99,6 +100,12 @@ In your Vercel project dashboard, go to "Settings" → "Environment Variables" a
 **"Failed to fetch playlists"**
 - This usually indicates an issue with the access token
 - Try logging out and logging in again
+
+**Audio features analysis issues**
+- If audio features appear to be default values, this may indicate ReccoBeats API issues
+- Check the Vercel function logs for ReccoBeats API-related errors
+- Verify the `RECCOBEATS_BASE_URL` is set correctly (or using the default)
+- ReccoBeats API requires no authentication, so no API key is needed
 
 ### Step-by-Step Redirect URI Fix
 

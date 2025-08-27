@@ -18,7 +18,9 @@ A web application that analyzes your Spotify playlists to provide insights about
 
 - **Backend**: Node.js, Express.js
 - **Frontend**: HTML, CSS, JavaScript (Vanilla)
-- **APIs**: Spotify Web API
+- **APIs**: 
+  - Spotify Web API (for OAuth and playlist access)
+  - ReccoBeats API (for audio features analysis)
 - **Deployment**: Render-ready configuration
 
 ## Setup Instructions
@@ -30,6 +32,10 @@ A web application that analyzes your Spotify playlists to provide insights about
    - Create a new app
    - Note your Client ID and Client Secret
    - Add redirect URI: `http://localhost:3000/callback` (for local development)
+
+2. **ReccoBeats API**: The application uses ReccoBeats for track audio features analysis
+   - No authentication or API key required
+   - The API directly accepts Spotify track IDs for analysis
 
 ### Local Development
 
@@ -49,10 +55,11 @@ A web application that analyzes your Spotify playlists to provide insights about
    cp .env.example .env
    ```
    
-   Edit `.env` file with your Spotify credentials:
+   Edit `.env` file with your API credentials:
    ```
    SPOTIFY_CLIENT_ID=your_client_id_here
    SPOTIFY_CLIENT_SECRET=your_client_secret_here
+   RECCOBEATS_BASE_URL=https://api.reccobeats.com/v1
    REDIRECT_URI=http://localhost:3000/callback
    PORT=3000
    ```

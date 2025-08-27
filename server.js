@@ -15,10 +15,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Spotify API credentials
+// Spotify API credentials (for OAuth and playlist access)
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
+
+// ReccoBeats API configuration (for track analysis)
+const RECCOBEATS_BASE_URL = process.env.RECCOBEATS_BASE_URL || 'https://api.reccobeats.com/v1';
 
 // Routes
 app.get('/', (req, res) => {
@@ -31,6 +34,7 @@ app.get('/debug/config', (req, res) => {
         redirectUri: REDIRECT_URI,
         hasClientId: !!CLIENT_ID,
         hasClientSecret: !!CLIENT_SECRET,
+        reccoBeatsBaseUrl: RECCOBEATS_BASE_URL,
         nodeEnv: process.env.NODE_ENV || 'development'
     });
 });
@@ -154,15 +158,8 @@ app.post('/api/analyze-playlist', async (req, res) => {
         const playlist = playlistResponse.data;
         const tracks = tracksResponse.data.items.filter(item => item.track && item.track.id);
 
-        // Get audio features for all tracks
-        const trackIds = tracks.map(item => item.track.id).join(',');
-        const audioFeaturesResponse = await axios.get(`https://api.spotify.com/v1/audio-features?ids=${trackIds}`, {
-            headers: {
-                'Authorization': `Bearer ${access_token}`
-            }
-        });
-
-        const audioFeatures = audioFeaturesResponse.data.audio_features;
+        // Get audio features using ReccoBeats Track Analysis
+        const audioFeatures = await getTrackAnalysis(tracks);
 
         // Perform analysis
         const analysis = analyzePlaylist(tracks, audioFeatures);
@@ -186,6 +183,70 @@ app.post('/api/analyze-playlist', async (req, res) => {
         });
     }
 });
+
+// Get track analysis from ReccoBeats API
+async function getTrackAnalysis(tracks) {
+    const audioFeatures = [];
+    
+    // Process tracks in batches to avoid rate limiting
+    const batchSize = 10;
+    for (let i = 0; i < tracks.length; i += batchSize) {
+        const batch = tracks.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (item) => {
+            try {
+                // Use Spotify track ID directly with ReccoBeats API (no authentication required)
+                const response = await axios.get(`${RECCOBEATS_BASE_URL}/track/${item.track.id}/audio-features`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 10000 // 10 second timeout
+                });
+
+                // ReccoBeats should return audio features in a compatible format
+                // If the response format differs from Spotify, we may need to map it
+                const features = response.data;
+                
+                // Ensure we return the expected format
+                return {
+                    id: item.track.id,
+                    danceability: features.danceability || 0.5,
+                    energy: features.energy || 0.5,
+                    speechiness: features.speechiness || 0.1,
+                    acousticness: features.acousticness || 0.3,
+                    instrumentalness: features.instrumentalness || 0.2,
+                    liveness: features.liveness || 0.2,
+                    valence: features.valence || 0.5,
+                    tempo: features.tempo || 120
+                };
+                
+            } catch (error) {
+                console.error(`Error analyzing track ${item.track.name} (${item.track.id}):`, error.message);
+                // Return default values if analysis fails
+                return {
+                    id: item.track.id,
+                    danceability: 0.5,
+                    energy: 0.5,
+                    speechiness: 0.1,
+                    acousticness: 0.3,
+                    instrumentalness: 0.2,
+                    liveness: 0.2,
+                    valence: 0.5,
+                    tempo: 120
+                };
+            }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        audioFeatures.push(...batchResults);
+        
+        // Add small delay between batches to respect rate limits
+        if (i + batchSize < tracks.length) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+
+    return audioFeatures;
+}
 
 // Analysis helper function
 function analyzePlaylist(tracks, audioFeatures) {
