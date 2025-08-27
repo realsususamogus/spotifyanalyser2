@@ -202,12 +202,14 @@ async function getTrackAnalysis(tracks) {
                 },
                 timeout: 10000
             });
+            console.log('API response: ', response.data)
 
+            
             // Map features from response to track IDs
             const featuresMap = {};
             response.data.forEach(track => {
                 featuresMap[track.spotify_id] = track.audio_features || {};
-                console.log('API response: ', response.data)
+                
             });
 
             batch.forEach(item => {
