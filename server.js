@@ -150,7 +150,6 @@ app.post('/api/analyze-playlist', async (req, res) => {
                 'Authorization': `Bearer ${access_token}`
             },
             params: {
-                limit: 100,
                 fields: 'items(track(id,name,artists,duration_ms,popularity,album(name)))'
             }
         });
