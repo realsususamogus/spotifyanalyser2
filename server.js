@@ -183,30 +183,27 @@ app.post('/api/analyze-playlist', async (req, res) => {
     }
 });
 
-// Get track analysis from ReccoBeats API using bulk endpoint
 async function getTrackAnalysis(tracks) {
     const audioFeatures = [];
-    const batchSize = 50; // Increase batch size for fewer requests
+    const batchSize = 50; // or your preferred batch size, but keep it reasonable
 
     for (let i = 0; i < tracks.length; i += batchSize) {
-        // Collect Spotify IDs for this batch
         const batch = tracks.slice(i, i + batchSize);
         const ids = batch.map(item => item.track.id);
 
         try {
-            // Bulk request: GET /track?ids=spotifyId1&ids=spotifyId2&...
+            // Use comma-separated ids string for the API request
             const response = await axios.get(`${RECCOBEATS_BASE_URL}/track`, {
                 params: {
-                    ids: ids // axios will serialize array as repeated param
+                    ids: ids.join(',') // <--- THIS IS THE KEY CHANGE
                 },
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                timeout: 10000 // 10 second timeout
+                timeout: 10000
             });
 
             // Map features from response to track IDs
-            // Assume response.data is an array of track objects with Spotify IDs
             const featuresMap = {};
             response.data.forEach(track => {
                 featuresMap[track.spotify_id] = track.audio_features || {};
@@ -231,7 +228,6 @@ async function getTrackAnalysis(tracks) {
                 `Error analyzing tracks ${ids.join(', ')}:`,
                 error.response?.data || error.message
             );
-            // Return default values for all tracks in batch
             batch.forEach(item => {
                 audioFeatures.push({
                     id: item.track.id,
@@ -247,7 +243,7 @@ async function getTrackAnalysis(tracks) {
             });
         }
 
-        // Add small delay between batches to respect rate limits
+        // Small delay between batches
         if (i + batchSize < tracks.length) {
             await new Promise(resolve => setTimeout(resolve, 500));
         }
