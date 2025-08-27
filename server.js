@@ -185,7 +185,7 @@ app.post('/api/analyze-playlist', async (req, res) => {
 
 async function getTrackAnalysis(tracks) {
     const audioFeatures = [];
-    const batchSize = 50; // or your preferred batch size, but keep it reasonable
+    const batchSize = 40; // or your preferred batch size, but keep it reasonable
 
     for (let i = 0; i < tracks.length; i += batchSize) {
         const batch = tracks.slice(i, i + batchSize);
