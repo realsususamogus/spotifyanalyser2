@@ -21,7 +21,6 @@ const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
 
 // ReccoBeats API configuration (for track analysis)
-const RECCOBEATS_API_KEY = process.env.RECCOBEATS_API_KEY;
 const RECCOBEATS_BASE_URL = process.env.RECCOBEATS_BASE_URL || 'https://api.reccobeats.com/v1';
 
 // Routes
@@ -35,7 +34,6 @@ app.get('/debug/config', (req, res) => {
         redirectUri: REDIRECT_URI,
         hasClientId: !!CLIENT_ID,
         hasClientSecret: !!CLIENT_SECRET,
-        hasReccoBeatsApiKey: !!RECCOBEATS_API_KEY,
         reccoBeatsBaseUrl: RECCOBEATS_BASE_URL,
         nodeEnv: process.env.NODE_ENV || 'development'
     });
@@ -188,22 +186,6 @@ app.post('/api/analyze-playlist', async (req, res) => {
 
 // Get track analysis from ReccoBeats API
 async function getTrackAnalysis(tracks) {
-    if (!RECCOBEATS_API_KEY) {
-        console.warn('ReccoBeats API key not configured. Using mock audio features data.');
-        // Return mock data with the expected structure when ReccoBeats is not configured
-        return tracks.map(item => ({
-            id: item.track.id,
-            danceability: Math.random() * 0.8 + 0.2, // 0.2-1.0
-            energy: Math.random() * 0.8 + 0.2,
-            speechiness: Math.random() * 0.3, // Lower values more common
-            acousticness: Math.random() * 0.6,
-            instrumentalness: Math.random() * 0.4,
-            liveness: Math.random() * 0.5,
-            valence: Math.random() * 0.8 + 0.2,
-            tempo: Math.random() * 140 + 60 // 60-200 BPM
-        }));
-    }
-
     const audioFeatures = [];
     
     // Process tracks in batches to avoid rate limiting
@@ -212,10 +194,9 @@ async function getTrackAnalysis(tracks) {
         const batch = tracks.slice(i, i + batchSize);
         const batchPromises = batch.map(async (item) => {
             try {
-                // Use Spotify track ID directly with ReccoBeats API
+                // Use Spotify track ID directly with ReccoBeats API (no authentication required)
                 const response = await axios.get(`${RECCOBEATS_BASE_URL}/track/${item.track.id}/audio-features`, {
                     headers: {
-                        'Authorization': `Bearer ${RECCOBEATS_API_KEY}`,
                         'Content-Type': 'application/json'
                     },
                     timeout: 10000 // 10 second timeout

@@ -33,10 +33,9 @@ A web application that analyzes your Spotify playlists to provide insights about
    - Note your Client ID and Client Secret
    - Add redirect URI: `http://localhost:3000/callback` (for local development)
 
-2. **ReccoBeats API Account**: You'll need a ReccoBeats API key for track analysis
-   - Go to [ReccoBeats API](https://api.reccobeats.com/)
-   - Sign up for an account or check their documentation for access
-   - Get your API key for track audio features analysis
+2. **ReccoBeats API**: The application uses ReccoBeats for track audio features analysis
+   - No authentication or API key required
+   - The API directly accepts Spotify track IDs for analysis
 
 ### Local Development
 
@@ -60,7 +59,6 @@ A web application that analyzes your Spotify playlists to provide insights about
    ```
    SPOTIFY_CLIENT_ID=your_client_id_here
    SPOTIFY_CLIENT_SECRET=your_client_secret_here
-   RECCOBEATS_API_KEY=your_reccobeats_api_key_here
    RECCOBEATS_BASE_URL=https://api.reccobeats.com/v1
    REDIRECT_URI=http://localhost:3000/callback
    PORT=3000

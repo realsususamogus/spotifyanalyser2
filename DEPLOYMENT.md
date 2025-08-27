@@ -52,8 +52,7 @@ In your Vercel project dashboard, go to "Settings" → "Environment Variables" a
 |--------------|-------|-------------|
 | `SPOTIFY_CLIENT_ID` | `your_client_id` | Your Spotify app's Client ID |
 | `SPOTIFY_CLIENT_SECRET` | `your_client_secret` | Your Spotify app's Client Secret |
-| `RECCOBEATS_API_KEY` | `your_reccobeats_api_key` | Your ReccoBeats API key for track analysis |
-| `RECCOBEATS_BASE_URL` | `https://api.reccobeats.com/v1` | ReccoBeats API base URL |
+| `RECCOBEATS_BASE_URL` | `https://api.reccobeats.com/v1` | ReccoBeats API base URL (optional, uses default if not set) |
 | `REDIRECT_URI` | `https://your-app-name.vercel.app/callback` | OAuth callback URL |
 
 **Important**: Replace `your-app-name` in the `REDIRECT_URI` with your actual Vercel deployment URL.
@@ -102,16 +101,11 @@ In your Vercel project dashboard, go to "Settings" → "Environment Variables" a
 - This usually indicates an issue with the access token
 - Try logging out and logging in again
 
-**"ReccoBeats API key not configured"**
-- Check that `RECCOBEATS_API_KEY` is set correctly in Vercel environment variables
-- Ensure you have an active ReccoBeats API account and valid API key
-- Verify the `RECCOBEATS_BASE_URL` is set correctly
-
-**Audio features showing mock data**
-- This indicates ReccoBeats API integration is not working properly
+**Audio features analysis issues**
+- If audio features appear to be default values, this may indicate ReccoBeats API issues
 - Check the Vercel function logs for ReccoBeats API-related errors
-- Verify your ReccoBeats API key is active and has available quota
-- Ensure the ReccoBeats API endpoint is responding correctly
+- Verify the `RECCOBEATS_BASE_URL` is set correctly (or using the default)
+- ReccoBeats API requires no authentication, so no API key is needed
 
 ### Step-by-Step Redirect URI Fix
 
