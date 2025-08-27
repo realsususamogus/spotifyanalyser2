@@ -193,7 +193,7 @@ async function getTrackAnalysis(tracks) {
 
         try {
             // Use comma-separated ids string for the API request
-            const response = await axios.get(`${RECCOBEATS_BASE_URL}/track`, {
+            const response = await axios.get(`https://api.reccobeats.com/v1/analysis/audio-features`, {
                 params: {
                     ids: ids.join(',')
                 },
