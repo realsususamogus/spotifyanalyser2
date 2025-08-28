@@ -1,3 +1,6 @@
+# Project on hold until Spotify provides alternative API solutions  
+Spotify deprecated 8 APIs in June and provided no alternative solutions. Thus I am unable to extract audio features required for this application to work. Reccobeats requires uploading audio files for the analysis, but that is too inefficient for playlists. 
+
 # Spotify Playlist Analyzer
 
 A web application that analyzes your Spotify playlists to provide insights about your music taste, including audio features, artist distribution, and listening patterns.
@@ -23,74 +26,6 @@ A web application that analyzes your Spotify playlists to provide insights about
   - ReccoBeats API (for audio features analysis)
 - **Deployment**: Render-ready configuration
 
-## Setup Instructions
-
-### Prerequisites
-
-1. **Spotify Developer Account**: You'll need to create a Spotify app to get API credentials
-   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-   - Create a new app
-   - Note your Client ID and Client Secret
-   - Add redirect URI: `http://localhost:3000/callback` (for local development)
-
-2. **ReccoBeats API**: The application uses ReccoBeats for track audio features analysis
-   - No authentication or API key required
-   - The API directly accepts Spotify track IDs for analysis
-
-### Local Development
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd spotifyanalyser2
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` file with your API credentials:
-   ```
-   SPOTIFY_CLIENT_ID=your_client_id_here
-   SPOTIFY_CLIENT_SECRET=your_client_secret_here
-   RECCOBEATS_BASE_URL=https://api.reccobeats.com/v1
-   REDIRECT_URI=http://localhost:3000/callback
-   PORT=3000
-   ```
-
-4. **Run the application**:
-   ```bash
-   npm start
-   ```
-
-5. **Open your browser** and navigate to `http://localhost:3000`
-
-### Deployment on Render
-
-1. **Fork this repository** to your GitHub account
-
-2. **Create a new Web Service** on [Render](https://render.com):
-   - Connect your GitHub repository
-   - Use the following settings:
-     - **Build Command**: `npm install`
-     - **Start Command**: `npm start`
-
-3. **Set Environment Variables** in Render dashboard:
-   - `SPOTIFY_CLIENT_ID`: Your Spotify Client ID
-   - `SPOTIFY_CLIENT_SECRET`: Your Spotify Client Secret
-   - `REDIRECT_URI`: `https://your-app-name.onrender.com/callback`
-
-4. **Update Spotify App Settings**:
-   - Go to your Spotify app in the Developer Dashboard
-   - Add your Render URL to the Redirect URIs: `https://your-app-name.onrender.com/callback`
-
-5. **Deploy** - Render will automatically deploy your app
 
 ## How It Works
 
@@ -143,14 +78,6 @@ The app analyzes several audio features provided by Spotify:
 - Average popularity score
 - Number of unique artists
 - Top artists by track count
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
 
 ## Privacy & Security
 
